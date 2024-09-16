@@ -1,0 +1,20 @@
+{
+  "name": "wechat-keyword-monitor",
+  "main": "dist/main.js",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start:bot": "nodemon src/bot.js",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.3.4"
+  },
+  "dependencies": {
+    "node-notifier": "^10.0.1",
+    "wechaty": "^1.20.2"
+  }
+}
