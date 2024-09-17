@@ -167,9 +167,18 @@ function isValidLength(str) {
 // 验证是否为引用的对话
 function isQuotedMessage(text) {
   // const quotePattern = /^「.*」.*- - - - - - - - - - - - - - -/;
-  const quotePattern = /^「.*」\n- - - - - - - - - - - - - - -/;
-  return quotePattern.test(text);
+  // const quotePattern = /^「.*」\n- - - - - - - - - - - - - - -/;
+  // const quotePattern = /^「.*」.*\n- - - - - - - - - - - - - - -\n/;
+  //const quotePattern = /^「.*」.*\n?- - - - - - - - - - - - - - -\n?/;
+  //return quotePattern.test(text);
+  const quotePattern = /^「[\s\S]*?- - - - - - - - - - - - - - -/;
+  const match = text.match(quotePattern);
+  //console.log(match);
+  return match !== null;
 }
+
+
+
 
 //发送信息校验
 function isValid(loadMessage) {
