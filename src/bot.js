@@ -1,11 +1,16 @@
 import { WechatyBuilder } from 'wechaty';
 import notifier from 'node-notifier';
 import { FileBox }  from 'file-box'
-
-const bot = WechatyBuilder.build();
+import axios from 'axios';
+const botName = 'BlueFatty'; // 机器人名字：蓝胖子
+const bot = WechatyBuilder.build(
+  {
+    name: botName, // 指定一个名称，生成 memory-card 文件
+  }
+);
 //const bot = Wechaty.build();
-
 const KEYWORDS = ['物理']; // 替换为你要监控的关键字
+const apiKey = 'sk-8gOk5vgBmoKR5BQZQ3Sd6mJUgFOuApi0vQV3cVrkZ8qXai1c';//作者个人使用，示例。他人请勿使用，真没钱了这个key拿来测试的
 let rooms = new Set(); // 使用Set来存储唯一的群聊
 let targetRoom = null;
 let myself = null;
@@ -42,6 +47,7 @@ bot
     console.log('群聊数量总计---------'+rooms.size)
   })
   .on('message', async message => {
+    try {
     if (message) {
       const type = message.type(); // 获取消息类型
       if (type === bot.Message.Type.Attachment || type === bot.Message.Type.Image || type === bot.Message.Type.Video) {
@@ -71,6 +77,14 @@ bot
           } else {
             loadMessage.orderingInformation = extractPhysicsTutoringInfo(text);
           }
+          //ai判断
+          loadMessage.orderingInformation = await aiChat(loadMessage.orderingInformation)
+          if(isValidLength(loadMessage.orderingInformation)){
+            console.log("gpt已经确认过这是目的信息")
+          }else{
+            console.log("gpt认为这不是目的信息");
+            continue;
+          }
           //判断是否群聊
           if (message.room()) {
             const topic = await message.room().topic();
@@ -81,7 +95,7 @@ bot
 
           if (myself) {
              // 调试信息
-             console.log(`Sending message to self: ${loadMessage.source}\n发送者: ${loadMessage.from}\n出单时间: ${loadMessage.sendingTime}\n客单信息: ${loadMessage.orderingInformation}`);
+             console.log(`Sending message to self: ${loadMessage.source}\n发送者: ${loadMessage.from}\n出单时间: ${loadMessage.sendingTime}\n${loadMessage.orderingInformation}`);
              console.log(`Myself contact: ${JSON.stringify(myself)}`);
              // 发消息到接单群
              const finalMessage = `${loadMessage.source}\n发送者: ${loadMessage.from}\n出单时间: ${loadMessage.sendingTime}\n客单信息: ${loadMessage.orderingInformation}`;
@@ -97,6 +111,14 @@ bot
       }
     }
   }
+}catch (error) {
+  if (error instanceof AssertionError || error.message.includes('message not found')) {
+      // 不打印断言错误信息
+      // 不打印找不到消息
+  } else {
+      console.error(error); // 打印其他类型的错误
+  }
+}
   });
 
 bot.start().catch(error => {
@@ -186,4 +208,34 @@ function isValid(loadMessage) {
   if(loadMessage.orderingInformation.length > 3000) return false //客单信息不能过长
   return true;
 }
+
+async function aiChat(info){
+  const text = info;
+  // 构建提示词
+  const prompt = `请识别这条信息里有没有物理家教客单的信息，如果有请帮我提取，并直接把提取出的信息直接发送给我，如果没有请回复0，不要发无关信息或者作多余的回答：\n\n"${text}"`;
+  try {
+    const response = await axios.post('https://apitb.gueai.com/v1/chat/completions', {
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+    }, {
+      timeout: 30000,
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Accept':'application/json'
+      },
+    });
+
+    const reply = response.data.choices[0].message.content.trim();
+    //console.log(reply)
+    console.log('运行到此处1111');
+    return reply;
+    //await message.say(reply);
+  } catch (error) {
+    console.error('Error:', error);
+    console.log('对不起，我暂时无法处理这个消息。');
+    return '0';
+  }
+}
+
 
