@@ -10,7 +10,7 @@ const bot = WechatyBuilder.build(
 );
 //const bot = Wechaty.build();
 const KEYWORDS = ['物理']; // 替换为你要监控的关键字
-const apiKey = 'sk-8gOk5vgBmoKR5BQZQ3Sd6mJUgFOuApi0vQV3cVrkZ8qXai1c';//作者个人使用，示例。他人请勿使用，真没钱了这个key拿来测试的
+const apiKey = 'sk-key';//作者个人使用，示例
 let rooms = new Set(); // 使用Set来存储唯一的群聊
 let targetRoom = null;
 let myself = null;
