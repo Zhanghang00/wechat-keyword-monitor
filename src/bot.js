@@ -87,12 +87,12 @@ bot
              const finalMessage = `${loadMessage.source}\n发送者: ${loadMessage.from}\n出单时间: ${loadMessage.sendingTime}\n客单信息: ${loadMessage.orderingInformation}`;
              if(isValid(loadMessage)) {
               await targetContact.say(finalMessage);
-            }
-             //电脑通知
-             notifier.notify({
+              //电脑通知
+              notifier.notify({
               title: '新征程起',
               message: `Detected keyword: ${keyword}\nMessage: ${finalMessage}`
             });
+            }
         }
       }
     }
