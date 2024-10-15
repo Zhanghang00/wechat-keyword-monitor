@@ -10,7 +10,10 @@ const bot = WechatyBuilder.build(
 );
 //const bot = Wechaty.build();
 const KEYWORDS = ['物理']; // 替换为你要监控的关键字
-const apiKey = 'sk-key';//作者个人使用，示例
+const apiKey = '';//作者个人使用，示例
+const notifyURL = 'https://api.day.app/';
+const iconURL = 'https://day.app/assets/images/avatar.jpg'
+const notifyTitle = '物理家教单';
 let rooms = new Set(); // 使用Set来存储唯一的群聊
 let targetRoom = null;
 let myself = null;
@@ -47,7 +50,7 @@ bot
     console.log('群聊数量总计---------'+rooms.size)
   })
   .on('message', async message => {
-    try {
+    //try {
     if (message) {
       const type = message.type(); // 获取消息类型
       if (type === bot.Message.Type.Attachment || type === bot.Message.Type.Image || type === bot.Message.Type.Video) {
@@ -97,9 +100,11 @@ bot
              // 调试信息
              console.log(`Sending message to self: ${loadMessage.source}\n发送者: ${loadMessage.from}\n出单时间: ${loadMessage.sendingTime}\n${loadMessage.orderingInformation}`);
              console.log(`Myself contact: ${JSON.stringify(myself)}`);
-             // 发消息到接单群
              const finalMessage = `${loadMessage.source}\n发送者: ${loadMessage.from}\n出单时间: ${loadMessage.sendingTime}\n客单信息: ${loadMessage.orderingInformation}`;
              if(isValid(loadMessage)) {
+              //通知手机
+              await notifyPhone(finalMessage);
+              // 发消息到接单群
               await targetContact.say(finalMessage);
               //电脑通知
               notifier.notify({
@@ -111,14 +116,14 @@ bot
       }
     }
   }
-}catch (error) {
+/* }catch (error) {
   if (error instanceof AssertionError || error.message.includes('message not found')) {
       // 不打印断言错误信息
       // 不打印找不到消息
   } else {
       console.error(error); // 打印其他类型的错误
   }
-}
+} */
   });
 
 bot.start().catch(error => {
@@ -134,7 +139,7 @@ bot.start().catch(error => {
     var time = timeObj.toTimeString().split(" ")[0];
     var rex = new RegExp(/:/g);
     str = year+"-"+month+"-"+date+" "+time.replace(rex,"-");
-   console.log("出单时间："+str);
+   //console.log("出单时间："+str);
    return str;
 }
 
@@ -204,7 +209,10 @@ function isQuotedMessage(text) {
 
 //发送信息校验
 function isValid(loadMessage) {
-  if(loadMessage.from==myself.name()) return false //检验消息是否来源于本人
+  if(loadMessage.from==myself.name()) {
+    console.log("消息来源于自己，不予发送");
+    return false 
+  }//检验消息是否来源于本人
   if(loadMessage.orderingInformation.length > 3000) return false //客单信息不能过长
   return true;
 }
@@ -236,6 +244,22 @@ async function aiChat(info){
     console.log('对不起，我暂时无法处理这个消息。');
     return '0';
   }
+}
+
+
+async function notifyPhone(text){
+  const notifyContent=text;
+  const params = new URLSearchParams({
+    sound: 'calypso',
+    icon: iconURL,
+    isArchive: '1'
+  });
+  const finalURL=`${notifyURL}/${notifyTitle}/${notifyContent}?${params}`
+  console.log(finalURL)
+  fetch(finalURL)
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
 }
 
 
